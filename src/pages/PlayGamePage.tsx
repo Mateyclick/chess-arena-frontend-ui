@@ -33,20 +33,25 @@ interface PlayerInfo {
 
 const PlayGamePage = () => {
   const { gameId } = useParams<{ gameId: string }>();
+  
+  console.log('🎮 PlayGamePage: Inicializando con gameId:', gameId);
+
   const [gameState, setGameState] = useState<GameState>(() => {
     const chess = new Chess();
-    return {
+    const initialState = {
       chess,
       currentFen: chess.fen(),
-      playerColor: 'white', // Se determinará dinámicamente
+      playerColor: 'white' as const,
       isMyTurn: true,
       gameHistory: [],
       gameResult: '*',
       isSpectating: false,
-      whiteTimeLeft: 300, // 5 minutos en segundos
+      whiteTimeLeft: 300,
       blackTimeLeft: 300,
       gameStatusMessage: 'Esperando oponente...'
     };
+    console.log('🎯 Estado inicial del juego:', initialState);
+    return initialState;
   });
 
   const [whitePlayer] = useState<PlayerInfo>({
@@ -63,9 +68,20 @@ const PlayGamePage = () => {
 
   const [connected, setConnected] = useState(false);
 
+  console.log('🎲 Estado actual del juego:', {
+    gameId,
+    playerColor: gameState.playerColor,
+    isMyTurn: gameState.isMyTurn,
+    currentFen: gameState.currentFen,
+    gameResult: gameState.gameResult,
+    connected
+  });
+
   // Simulación de conexión y inicio de partida
   useEffect(() => {
+    console.log('🔌 Simulando conexión al juego...');
     const timer = setTimeout(() => {
+      console.log('✅ Conexión establecida, iniciando partida');
       setConnected(true);
       setGameState(prev => ({
         ...prev,
@@ -73,61 +89,100 @@ const PlayGamePage = () => {
       }));
     }, 2000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('🧹 Limpiando timer de conexión');
+      clearTimeout(timer);
+    };
   }, []);
 
   // Simulación del reloj
   useEffect(() => {
-    if (!connected || gameState.gameResult !== '*') return;
+    if (!connected || gameState.gameResult !== '*') {
+      console.log('⏰ Reloj detenido - connected:', connected, 'gameResult:', gameState.gameResult);
+      return;
+    }
+
+    console.log('⏰ Iniciando reloj - turno actual:', gameState.isMyTurn ? 'mío' : 'oponente');
 
     const interval = setInterval(() => {
       setGameState(prev => {
-        if (prev.isMyTurn && prev.playerColor === 'white') {
-          return { ...prev, whiteTimeLeft: Math.max(0, prev.whiteTimeLeft - 1) };
-        } else if (!prev.isMyTurn && prev.playerColor === 'white') {
-          return { ...prev, blackTimeLeft: Math.max(0, prev.blackTimeLeft - 1) };
-        } else if (prev.isMyTurn && prev.playerColor === 'black') {
-          return { ...prev, blackTimeLeft: Math.max(0, prev.blackTimeLeft - 1) };
+        const activePlayer = prev.isMyTurn && prev.playerColor === 'white' ? 'white' :
+                           !prev.isMyTurn && prev.playerColor === 'white' ? 'black' :
+                           prev.isMyTurn && prev.playerColor === 'black' ? 'black' : 'white';
+        
+        console.log('⏱️ Tick del reloj - jugador activo:', activePlayer);
+
+        if (activePlayer === 'white') {
+          const newTime = Math.max(0, prev.whiteTimeLeft - 1);
+          if (newTime === 0) console.log('⚠️ ¡Tiempo agotado para blancas!');
+          return { ...prev, whiteTimeLeft: newTime };
         } else {
-          return { ...prev, whiteTimeLeft: Math.max(0, prev.whiteTimeLeft - 1) };
+          const newTime = Math.max(0, prev.blackTimeLeft - 1);
+          if (newTime === 0) console.log('⚠️ ¡Tiempo agotado para negras!');
+          return { ...prev, blackTimeLeft: newTime };
         }
       });
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      console.log('🧹 Limpiando intervalo del reloj');
+      clearInterval(interval);
+    };
   }, [connected, gameState.isMyTurn, gameState.playerColor, gameState.gameResult]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    console.log('🕐 Tiempo formateado:', seconds, 'segundos =', formatted);
+    return formatted;
   };
 
   const handlePieceDrop = useCallback((sourceSquare: string, targetSquare: string) => {
+    console.log('♟️ Intento de movimiento:', {
+      from: sourceSquare,
+      to: targetSquare,
+      connected,
+      isSpectating: gameState.isSpectating,
+      isMyTurn: gameState.isMyTurn,
+      gameResult: gameState.gameResult
+    });
+
     if (!connected || gameState.isSpectating || !gameState.isMyTurn || gameState.gameResult !== '*') {
+      console.log('❌ Movimiento bloqueado por condiciones del juego');
       return false;
     }
 
     try {
+      console.log('🎯 Intentando mover pieza con chess.js...');
       const move = gameState.chess.move({
         from: sourceSquare,
         to: targetSquare,
-        promotion: 'q' // Por simplicidad, siempre promover a reina
+        promotion: 'q'
       });
 
       if (move) {
+        console.log('✅ Movimiento válido ejecutado:', move);
+
         // Actualizar el historial de movimientos
         const moveNumber = Math.ceil(gameState.chess.history().length / 2);
         const isWhiteMove = gameState.chess.history().length % 2 === 1;
+        
+        console.log('📝 Actualizando historial:', {
+          moveNumber,
+          isWhiteMove,
+          moveSan: move.san,
+          totalMoves: gameState.chess.history().length
+        });
         
         setGameState(prev => {
           const newHistory = [...prev.gameHistory];
           
           if (isWhiteMove) {
-            // Es movimiento de blancas
+            console.log('⚪ Agregando movimiento de blancas');
             newHistory.push({ moveNumber, white: move.san });
           } else {
-            // Es movimiento de negras
+            console.log('⚫ Agregando movimiento de negras');
             const lastMove = newHistory[newHistory.length - 1];
             if (lastMove && lastMove.moveNumber === moveNumber) {
               lastMove.black = move.san;
@@ -143,14 +198,17 @@ const PlayGamePage = () => {
           if (prev.chess.isCheckmate()) {
             gameResult = prev.chess.turn() === 'w' ? '0-1' : '1-0';
             statusMessage = `¡Jaque Mate! ${gameResult === '1-0' ? 'Ganan Blancas' : 'Ganan Negras'}`;
+            console.log('🏁 ¡JAQUE MATE!', { gameResult, winner: gameResult === '1-0' ? 'Blancas' : 'Negras' });
           } else if (prev.chess.isDraw()) {
             gameResult = '1/2-1/2';
             statusMessage = '¡Tablas!';
+            console.log('🤝 ¡TABLAS!');
           } else if (prev.chess.isCheck()) {
             statusMessage = `¡Jaque! ${prev.chess.turn() === 'w' ? 'Juegan Blancas' : 'Juegan Negras'}`;
+            console.log('⚡ ¡JAQUE! - turno de:', prev.chess.turn() === 'w' ? 'Blancas' : 'Negras');
           }
 
-          return {
+          const newState = {
             ...prev,
             currentFen: prev.chess.fen(),
             isMyTurn: !prev.isMyTurn,
@@ -158,30 +216,53 @@ const PlayGamePage = () => {
             gameResult,
             gameStatusMessage: statusMessage
           };
+
+          console.log('🔄 Estado actualizado después del movimiento:', newState);
+          return newState;
         });
 
         return true;
+      } else {
+        console.log('❌ chess.js rechazó el movimiento - move es null');
       }
     } catch (error) {
-      console.error('Movimiento inválido:', error);
+      console.error('💥 Error al procesar movimiento:', error);
+      console.error('📊 Detalles del error:', {
+        from: sourceSquare,
+        to: targetSquare,
+        currentFen: gameState.currentFen,
+        turn: gameState.chess.turn()
+      });
     }
 
     return false;
   }, [connected, gameState.chess, gameState.isSpectating, gameState.isMyTurn, gameState.gameResult, gameState.gameHistory]);
 
   const handleOfferDraw = () => {
-    console.log('Ofreciendo tablas...');
+    console.log('🤝 Usuario ofrece tablas');
     // Aquí se implementaría la lógica para ofrecer tablas
   };
 
   const handleResign = () => {
-    console.log('Rindiéndose...');
+    console.log('🏳️ Usuario se rinde');
+    const newResult = gameState.playerColor === 'white' ? '0-1' : '1-0';
+    const winner = gameState.playerColor === 'white' ? 'Negras' : 'Blancas';
+    
+    console.log('🏁 Partida terminada por abandono:', { newResult, winner });
+    
     setGameState(prev => ({
       ...prev,
-      gameResult: prev.playerColor === 'white' ? '0-1' : '1-0',
-      gameStatusMessage: `${prev.playerColor === 'white' ? 'Negras' : 'Blancas'} ganan por abandono`
+      gameResult: newResult,
+      gameStatusMessage: `${winner} ganan por abandono`
     }));
   };
+
+  console.log('🎨 Renderizando PlayGamePage con datos:', {
+    whitePlayer: gameState.playerColor === 'white' ? 'YO' : whitePlayer.name,
+    blackPlayer: gameState.playerColor === 'black' ? 'YO' : blackPlayer.name,
+    boardOrientation: gameState.playerColor,
+    moveCount: gameState.gameHistory.length
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
@@ -189,7 +270,10 @@ const PlayGamePage = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" onClick={() => window.history.back()}>
+            <Button variant="outline" size="sm" onClick={() => {
+              console.log('🔙 Navegando de vuelta al lobby');
+              window.history.back();
+            }}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver al Lobby
             </Button>
@@ -269,10 +353,10 @@ const PlayGamePage = () => {
                        gameState.gameResult === '0-1' ? 'Ganan Negras' : 'Tablas'}
                     </Badge>
                     <div className="mt-4 space-x-2">
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => console.log('📊 Analizando partida...')}>
                         Analizar Partida
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => console.log('📥 Descargando PGN...')}>
                         Descargar PGN
                       </Button>
                     </div>

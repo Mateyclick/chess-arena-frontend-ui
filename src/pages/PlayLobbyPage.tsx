@@ -9,6 +9,8 @@ import { Clock, Users, Trophy } from 'lucide-react';
 const PlayLobbyPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  console.log('🏛️ PlayLobbyPage renderizado');
+
   // Mock data para partidas en curso y estadísticas
   const ongoingGames = [
     { id: 'game1', whitePlayer: 'Carlos M.', blackPlayer: 'Ana L.', timeControl: '5+0', status: 'En curso' },
@@ -21,22 +23,36 @@ const PlayLobbyPage = () => {
     { id: 'recent3', opponent: 'Diego M.', result: '1/2-1/2', timeControl: '15+10', date: '2025-01-13' },
   ];
 
+  console.log('📊 Datos del lobby:', {
+    partidas_en_curso: ongoingGames.length,
+    partidas_recientes: recentGames.length
+  });
+
   const getResultBadgeVariant = (result: string) => {
-    switch (result) {
-      case '1-0': return 'default';
-      case '0-1': return 'destructive';
-      case '1/2-1/2': return 'secondary';
-      default: return 'outline';
-    }
+    const variant = result === '1-0' ? 'default' : result === '0-1' ? 'destructive' : 'secondary';
+    console.log('🏆 Badge variant para resultado', result, ':', variant);
+    return variant;
   };
 
   const getResultText = (result: string) => {
-    switch (result) {
-      case '1-0': return 'Victoria';
-      case '0-1': return 'Derrota';
-      case '1/2-1/2': return 'Tablas';
-      default: return result;
-    }
+    const text = result === '1-0' ? 'Victoria' : result === '0-1' ? 'Derrota' : result === '1/2-1/2' ? 'Tablas' : result;
+    console.log('📝 Texto para resultado', result, ':', text);
+    return text;
+  };
+
+  const handleCreateChallengeClick = () => {
+    console.log('➕ Abriendo modal para crear desafío');
+    setIsCreateModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    console.log('❌ Cerrando modal de crear desafío');
+    setIsCreateModalOpen(false);
+  };
+
+  const handleGameClick = (gameId: string) => {
+    console.log('🎯 Navegando a partida:', gameId);
+    window.location.href = `/play/${gameId}`;
   };
 
   return (
@@ -53,7 +69,7 @@ const PlayLobbyPage = () => {
           <Button 
             size="lg" 
             className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={handleCreateChallengeClick}
           >
             <Trophy className="mr-2 h-5 w-5" />
             Crear Nuevo Desafío
@@ -74,7 +90,11 @@ const PlayLobbyPage = () => {
               {ongoingGames.length > 0 ? (
                 <div className="space-y-3">
                   {ongoingGames.map((game) => (
-                    <div key={game.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border hover:bg-slate-100 transition-colors cursor-pointer">
+                    <div 
+                      key={game.id} 
+                      className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border hover:bg-slate-100 transition-colors cursor-pointer"
+                      onClick={() => handleGameClick(game.id)}
+                    >
                       <div className="flex items-center gap-4">
                         <div className="text-sm">
                           <div className="font-medium text-slate-800">{game.whitePlayer} vs {game.blackPlayer}</div>
@@ -88,7 +108,14 @@ const PlayLobbyPage = () => {
                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                           {game.status}
                         </Badge>
-                        <Button size="sm" variant="outline" onClick={() => window.location.href = `/play/${game.id}`}>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGameClick(game.id);
+                          }}
+                        >
                           Ver Partida
                         </Button>
                       </div>
@@ -169,7 +196,7 @@ const PlayLobbyPage = () => {
 
       <CreateChallengeModal 
         isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
+        onClose={handleModalClose} 
       />
     </div>
   );

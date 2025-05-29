@@ -17,9 +17,26 @@ export const ChessBoardComponent: React.FC<ChessBoardComponentProps> = ({
   arePiecesDraggable,
   customSquareStyles = {}
 }) => {
+  console.log('♟️ ChessBoardComponent renderizado con:', {
+    fen,
+    orientation,
+    arePiecesDraggable,
+    customSquareStylesCount: Object.keys(customSquareStyles).length
+  });
+
   const handlePieceDrop = (sourceSquare: string, targetSquare: string): boolean => {
-    return onPieceDrop(sourceSquare, targetSquare);
+    console.log('🎯 ChessBoardComponent: handlePieceDrop llamado', {
+      from: sourceSquare,
+      to: targetSquare,
+      draggable: arePiecesDraggable
+    });
+    
+    const result = onPieceDrop(sourceSquare, targetSquare);
+    console.log('📤 ChessBoardComponent: resultado del movimiento:', result);
+    return result;
   };
+
+  console.log('🎨 Renderizando tablero con ancho:', Math.min(600, window.innerWidth - 100));
 
   return (
     <div className="w-full max-w-xl mx-auto">

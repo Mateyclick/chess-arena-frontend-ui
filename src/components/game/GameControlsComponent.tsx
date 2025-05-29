@@ -18,19 +18,24 @@ export const GameControlsComponent: React.FC<GameControlsComponentProps> = ({
 }) => {
   const [isOfferingDraw, setIsOfferingDraw] = useState(false);
 
+  console.log('🎮 GameControlsComponent renderizado:', { disabled, isOfferingDraw });
+
   const handleOfferDraw = () => {
+    console.log('🤝 Ofreciendo tablas...');
     setIsOfferingDraw(true);
     onOfferDraw();
     toast.success('Has ofrecido tablas a tu oponente');
     
     // Simular respuesta del oponente (por ahora)
     setTimeout(() => {
+      console.log('⏰ Simulando respuesta del oponente a la oferta de tablas');
       setIsOfferingDraw(false);
       // toast.info('Tu oponente ha rechazado las tablas');
     }, 3000);
   };
 
   const handleResign = () => {
+    console.log('🏳️ Confirmando rendición...');
     onResign();
     toast.error('Te has rendido');
   };
@@ -56,6 +61,7 @@ export const GameControlsComponent: React.FC<GameControlsComponentProps> = ({
               variant="destructive"
               disabled={disabled}
               className="flex items-center gap-2"
+              onClick={() => console.log('🚨 Abriendo diálogo de confirmación para rendirse')}
             >
               <Flag className="h-4 w-4" />
               Rendirse
@@ -69,8 +75,13 @@ export const GameControlsComponent: React.FC<GameControlsComponentProps> = ({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleResign} className="bg-red-600 hover:bg-red-700">
+              <AlertDialogCancel onClick={() => console.log('❌ Cancelando rendición')}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleResign} 
+                className="bg-red-600 hover:bg-red-700"
+              >
                 Sí, rendirse
               </AlertDialogAction>
             </AlertDialogFooter>
