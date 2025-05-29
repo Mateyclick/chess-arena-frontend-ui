@@ -262,7 +262,8 @@ const PlayGamePage = () => {
     blackPlayer: gameState.playerColor === 'black' ? 'YO' : blackPlayer.name,
     boardOrientation: gameState.playerColor,
     moveCount: gameState.gameHistory.length,
-    isSpectating: gameState.isSpectating
+    isSpectating: gameState.isSpectating,
+    showGameControls: !gameState.isSpectating && gameState.gameResult === '*' && connected
   });
 
   return (
@@ -347,7 +348,7 @@ const PlayGamePage = () => {
               </CardContent>
             </Card>
 
-            {/* Información para Espectadores */}
+            {/* Panel de Espectador - SOLO para espectadores */}
             {gameState.isSpectating && (
               <Card className="shadow-lg border-0 bg-gradient-to-br from-purple-50 to-indigo-50 backdrop-blur-sm">
                 <CardContent className="p-6">
@@ -372,8 +373,8 @@ const PlayGamePage = () => {
               </Card>
             )}
 
-            {/* Controles del Juego - SOLO para jugadores activos */}
-            {!gameState.isSpectating && gameState.gameResult === '*' && (
+            {/* Controles del Juego - SOLO para jugadores activos en partida activa */}
+            {!gameState.isSpectating && connected && gameState.gameResult === '*' && (
               <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
                 <CardContent className="p-6">
                   <GameControlsComponent
