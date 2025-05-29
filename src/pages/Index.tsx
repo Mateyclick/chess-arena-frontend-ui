@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Chess, Trophy, Users, Clock } from "lucide-react";
+import { Crown, Trophy, Users, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -24,7 +24,7 @@ const Index = () => {
                   <div className="rounded-md shadow">
                     <Link to="/play">
                       <Button size="lg" className="w-full bg-blue-600 hover:bg-blue-700 text-lg px-8 py-4">
-                        <Chess className="mr-2 h-5 w-5" />
+                        <Crown className="mr-2 h-5 w-5" />
                         Jugar Ahora
                       </Button>
                     </Link>
@@ -123,7 +123,7 @@ const Index = () => {
               size="lg" 
               className="mt-8 bg-white text-blue-600 hover:bg-gray-50 text-lg px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              <Chess className="mr-2 h-5 w-5" />
+              <Crown className="mr-2 h-5 w-5" />
               Ir al Lobby de Juego
             </Button>
           </Link>
