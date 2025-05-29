@@ -261,7 +261,8 @@ const PlayGamePage = () => {
     whitePlayer: gameState.playerColor === 'white' ? 'YO' : whitePlayer.name,
     blackPlayer: gameState.playerColor === 'black' ? 'YO' : blackPlayer.name,
     boardOrientation: gameState.playerColor,
-    moveCount: gameState.gameHistory.length
+    moveCount: gameState.gameHistory.length,
+    isSpectating: gameState.isSpectating
   });
 
   return (
@@ -282,9 +283,9 @@ const PlayGamePage = () => {
               <div className="flex items-center gap-2 text-sm text-slate-600">
                 <Badge variant="outline">Blitz 5+0</Badge>
                 {gameState.isSpectating && (
-                  <Badge variant="secondary" className="flex items-center gap-1">
+                  <Badge variant="secondary" className="flex items-center gap-1 bg-purple-100 text-purple-800">
                     <Users className="h-3 w-3" />
-                    Espectador
+                    Modo Espectador
                   </Badge>
                 )}
               </div>
@@ -292,6 +293,23 @@ const PlayGamePage = () => {
           </div>
           <GameStatusDisplay gameStatusMessage={gameState.gameStatusMessage} />
         </div>
+
+        {/* Información especial para espectadores */}
+        {gameState.isSpectating && (
+          <div className="mb-6">
+            <Card className="shadow-lg border-0 bg-gradient-to-r from-purple-50 to-blue-50 backdrop-blur-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-center gap-3 text-purple-700">
+                  <Users className="h-5 w-5" />
+                  <span className="font-medium">Estás viendo esta partida como espectador</span>
+                </div>
+                <p className="text-center text-sm text-purple-600 mt-1">
+                  Puedes seguir todos los movimientos pero no puedes participar en el juego
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
           {/* Información del Jugador Superior */}
@@ -313,7 +331,7 @@ const PlayGamePage = () => {
                 <ChessBoardComponent
                   fen={gameState.currentFen}
                   onPieceDrop={handlePieceDrop}
-                  orientation={gameState.playerColor}
+                  orientation={gameState.isSpectating ? 'white' : gameState.playerColor}
                   arePiecesDraggable={!gameState.isSpectating && gameState.isMyTurn && connected && gameState.gameResult === '*'}
                 />
               </CardContent>
@@ -329,7 +347,32 @@ const PlayGamePage = () => {
               </CardContent>
             </Card>
 
-            {/* Controles del Juego */}
+            {/* Información para Espectadores */}
+            {gameState.isSpectating && (
+              <Card className="shadow-lg border-0 bg-gradient-to-br from-purple-50 to-indigo-50 backdrop-blur-sm">
+                <CardContent className="p-6">
+                  <div className="text-center space-y-3">
+                    <div className="flex items-center justify-center gap-2 text-purple-700">
+                      <Users className="h-5 w-5" />
+                      <h3 className="font-semibold">Panel de Espectador</h3>
+                    </div>
+                    <div className="space-y-2 text-sm text-slate-600">
+                      <p>• Puedes seguir la partida en tiempo real</p>
+                      <p>• Los movimientos se actualizan automáticamente</p>
+                      <p>• No puedes interactuar con las piezas</p>
+                    </div>
+                    <div className="pt-2">
+                      <Button variant="outline" size="sm" className="w-full" onClick={() => console.log('📊 Analizando partida en vivo...')}>
+                        <Users className="h-4 w-4 mr-2" />
+                        Analizar Posición
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Controles del Juego - SOLO para jugadores activos */}
             {!gameState.isSpectating && gameState.gameResult === '*' && (
               <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
                 <CardContent className="p-6">
